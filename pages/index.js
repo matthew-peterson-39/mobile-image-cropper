@@ -9,6 +9,7 @@ export default function Home() {
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [focalPoint, setFocalPoint] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [originalFileName, setOriginalFileName] = useState('');
   
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
@@ -22,11 +23,20 @@ export default function Home() {
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
+      // Extract filename without extension
+      const fullName = file.name;
+      const lastDotIndex = fullName.lastIndexOf('.');
+      const nameWithoutExtension = lastDotIndex > 0 ? fullName.substring(0, lastDotIndex) : fullName;
+      
+      setOriginalFileName(nameWithoutExtension);
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         setOriginalImage(e.target.result);
         setCroppedImage(null);
         setFocalPoint(null);
+        // Set default filename with -m suffix
+        setFileName(nameWithoutExtension + '-m');
       };
       reader.readAsDataURL(file);
     }
@@ -133,10 +143,12 @@ export default function Home() {
     if (!croppedImage) return;
 
     const link = document.createElement('a');
-    // Use custom filename if provided, otherwise use timestamp
+    // Use custom filename if provided, otherwise use original + -m, fallback to timestamp
     const downloadFileName = fileName.trim() 
       ? `${fileName.trim()}.jpg` 
-      : `mobile-cropped-${Date.now()}.jpg`;
+      : originalFileName 
+        ? `${originalFileName}-m.jpg`
+        : `mobile-cropped-${Date.now()}.jpg`;
     
     link.download = downloadFileName;
     link.href = croppedImage;
@@ -151,6 +163,7 @@ export default function Home() {
     setIsProcessing(false);
     setFocalPoint(null);
     setFileName('');
+    setOriginalFileName('');
     setImageDimensions({ width: 0, height: 0 });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -218,7 +231,7 @@ export default function Home() {
                       <div className="filename-input-container">
                         <input
                           type="text"
-                          placeholder="Enter filename (optional)"
+                          placeholder="Edit filename if needed"
                           value={fileName}
                           onChange={(e) => setFileName(e.target.value)}
                           className="filename-input"
