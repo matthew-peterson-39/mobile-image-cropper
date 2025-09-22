@@ -8,6 +8,7 @@ export default function Home() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
   const [focalPoint, setFocalPoint] = useState(null);
+  const [fileName, setFileName] = useState('');
   
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
@@ -132,7 +133,12 @@ export default function Home() {
     if (!croppedImage) return;
 
     const link = document.createElement('a');
-    link.download = `mobile-cropped-${Date.now()}.jpg`;
+    // Use custom filename if provided, otherwise use timestamp
+    const downloadFileName = fileName.trim() 
+      ? `${fileName.trim()}.jpg` 
+      : `mobile-cropped-${Date.now()}.jpg`;
+    
+    link.download = downloadFileName;
     link.href = croppedImage;
     document.body.appendChild(link);
     link.click();
@@ -144,6 +150,7 @@ export default function Home() {
     setCroppedImage(null);
     setIsProcessing(false);
     setFocalPoint(null);
+    setFileName('');
     setImageDimensions({ width: 0, height: 0 });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -208,6 +215,18 @@ export default function Home() {
                     </button>
                   ) : (
                     <>
+                      <div className="filename-input-container">
+                        <input
+                          type="text"
+                          placeholder="Enter filename (optional)"
+                          value={fileName}
+                          onChange={(e) => setFileName(e.target.value)}
+                          className="filename-input"
+                          maxLength={50}
+                        />
+                        <small className="filename-hint">.jpg</small>
+                      </div>
+                      
                       <button onClick={downloadImage} className="control-btn download-btn">
                         📥 Download
                       </button>
@@ -459,15 +478,37 @@ export default function Home() {
             transform: translateY(-1px);
           }
 
-          .clear-btn {
-            background: transparent;
-            color: #dc3545;
-            border: 2px solid #dc3545;
+          .filename-input-container {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            position: relative;
           }
 
-          .clear-btn:hover {
-            background: #dc3545;
-            color: white;
+          .filename-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            min-width: 200px;
+            background: white;
+            transition: all 0.3s ease;
+          }
+
+          .filename-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+          }
+
+          .filename-input::placeholder {
+            color: #999;
+          }
+
+          .filename-hint {
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 500;
           }
 
           .image-grid {
@@ -599,6 +640,17 @@ export default function Home() {
             .action-section {
               width: 100%;
               justify-content: center;
+            }
+
+            .filename-input-container {
+              flex-direction: column;
+              gap: 0.5rem;
+              width: 100%;
+            }
+
+            .filename-input {
+              min-width: auto;
+              width: 100%;
             }
 
             .control-btn {
